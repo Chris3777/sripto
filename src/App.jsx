@@ -2,235 +2,177 @@ import { useState } from 'react';
 import './App.css';
 
 function App() {
-  const [uploads, setUploads] = useState({
-    reference: { file: null, name: 'Character 1', enabled: true },
-    scene: { file: null, name: 'Character 2', enabled: true },
-    style: { file: null, name: 'Character 3', enabled: true },
-    custom: { file: null, name: 'Character 4', enabled: true }
-  });
+  const [references, setReferences] = useState([
+    { id: 1, name: 'Reference 1', file: null, preview: null },
+    { id: 2, name: 'Reference 2', file: null, preview: null },
+    { id: 3, name: 'Reference 3', file: null, preview: null },
+    { id: 4, name: 'Reference 4', file: null, preview: null }
+  ]);
   
-  const [aspectRatio, setAspectRatio] = useState('16:9');
   const [prompts, setPrompts] = useState(['']);
-  const [results, setResults] = useState([]);
-  const [isGenerating, setIsGenerating] = useState(false);
-
-  const handleFileUpload = (type, file) => {
-    setUploads(prev => ({
-      ...prev,
-      [type]: { ...prev[type], file }
-    }));
+  const [shots, setShots] = useState([]);
+  const [resolution, setResolution] = useState('3840x2160');
+  const [fps, setFps] = useState('24');
+  
+  const handleImageUpload = (id, event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setReferences(refs => refs.map(ref => 
+          ref.id === id ? { ...ref, file, preview: reader.result } : ref
+        ));
+      };
+      reader.readAsDataURL(file);
+    }
   };
-
-  const handleNameChange = (type, name) => {
-    setUploads(prev => ({
-      ...prev,
-      [type]: { ...prev[type], name }
-    }));
-  };
-
-  const handleToggle = (type) => {
-    setUploads(prev => ({
-      ...prev,
-      [type]: { ...prev[type], enabled: !prev[type].enabled }
-    }));
-  };
-
-  const handlePromptChange = (index, value) => {
+  
+  const addPrompt = () => setPrompts([...prompts, '']);
+  
+  const updatePrompt = (index, value) => {
     const newPrompts = [...prompts];
     newPrompts[index] = value;
     setPrompts(newPrompts);
   };
-
-  const addPrompt = () => {
-    if (prompts.length < 10) {
-      setPrompts([...prompts, '']);
-    }
-  };
-
-  const removePrompt = (index) => {
-    const newPrompts = prompts.filter((_, i) => i !== index);
-    setPrompts(newPrompts.length ? newPrompts : ['']);
-  };
-
-  const generateImages = async () => {
-    setIsGenerating(true);
-    
-    // Simulate image generation with cinematic 4K realistic placeholder
-    const newResults = [];
-    const date = new Date();
-    const dateStr = `${String(date.getDate()).padStart(2, '0')}${date.toLocaleString('en', { month: 'short' })}${date.getFullYear()}`;
-    
-    prompts.forEach((prompt, index) => {
-      if (prompt.trim()) {
-        // Create mock result with cinematic parameters
-        const result = {
-          id: `${String(index + 1).padStart(3, '0')}_${dateStr}`,
-          prompt: prompt,
-          imageUrl: `https://via.placeholder.com/1920x1080/1a1a1a/00ff00?text=4K+Cinematic+Frame+${index + 1}`,
-          script: {
-            camera: `${aspectRatio === '16:9' ? 'Widescreen' : aspectRatio === '9:16' ? 'Vertical' : 'Standard'} - 4K Cinema Camera`,
-            lighting: 'Cinematic three-point setup with practical lights',
-            audio: 'Ambient sound with dramatic score',
-            continuity: `Scene ${index + 1} - High realism action sequence`
-          },
-          timestamp: new Date().toISOString()
-        };
-        newResults.push(result);
-      }
-    });
-    
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setResults(prev => [...prev, ...newResults]);
-    setIsGenerating(false);
-  };
-
-  const downloadAll = () => {
-    results.forEach(result => {
-      // Create download link for each result
-      const link = document.createElement('a');
-      link.href = result.imageUrl;
-      link.download = `${result.id}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    });
-  };
-
-  const exportScript = () => {
-    const scriptData = results.map(r => ({
-      id: r.id,
-      prompt: r.prompt,
-      ...r.script
+  
+  const generateShots = () => {
+    const newShots = prompts.filter(p => p.trim()).map((prompt, i) => ({
+      id: Date.now() + i,
+      number: i + 1,
+      description: prompt,
+      resolution,
+      fps,
+      duration: '00:00:05',
+      camera: 'Wide angle, 35mm',
+      lighting: 'Natural daylight, high contrast'
     }));
-    
-    const blob = new Blob([JSON.stringify(scriptData, null, 2)], { type: 'application/json' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `script_${new Date().getTime()}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    setShots(newShots);
   };
-
+  
+  const deleteShot = (id) => {
+    setShots(shots.filter(s => s.id !== id));
+  };
+  
   return (
     <div className="app">
       <header className="header">
-        <h1>🎬 SRIPTO</h1>
-        <p>4K Cinematic Realistic Action Movie Frame Generator</p>
+        <h1>SRIPTO</h1>
+        <p>Professional Video Frame Generator</p>
       </header>
-
+      
       <div className="container">
-        <div className="left-panel">
-          <section className="upload-section">
-            <h2>Character References</h2>
-            {Object.entries(uploads).map(([key, data]) => (
-              <div key={key} className="upload-slot">
-                <div className="slot-header">
-                  <input
-                    type="checkbox"
-                    checked={data.enabled}
-                    onChange={() => handleToggle(key)}
-                  />
-                  <input
-                    type="text"
-                    value={data.name}
-                    onChange={(e) => handleNameChange(key, e.target.value)}
-                    className="name-input"
-                  />
+        <section className="references-section">
+          <h2>Reference Images</h2>
+          <div className="references-grid">
+            {references.map(ref => (
+              <div key={ref.id} className="reference-card">
+                <div className="reference-preview">
+                  {ref.preview ? (
+                    <img src={ref.preview} alt={ref.name} />
+                  ) : (
+                    <div className="preview-placeholder">No image</div>
+                  )}
                 </div>
-                <label className="file-upload">
+                <input
+                  type="text"
+                  value={ref.name}
+                  onChange={(e) => setReferences(refs => 
+                    refs.map(r => r.id === ref.id ? {...r, name: e.target.value} : r)
+                  )}
+                  className="reference-name"
+                />
+                <label className="upload-btn">
+                  Choose File
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => handleFileUpload(key, e.target.files[0])}
+                    onChange={(e) => handleImageUpload(ref.id, e)}
+                    style={{ display: 'none' }}
                   />
-                  <span>{data.file ? data.file.name : `Upload ${key} image`}</span>
                 </label>
               </div>
             ))}
-          </section>
-
-          <section className="settings-section">
-            <h2>Settings</h2>
-            <div className="setting-item">
-              <label>Aspect Ratio:</label>
-              <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value)}>
-                <option value="16:9">16:9 (Widescreen)</option>
-                <option value="9:16">9:16 (Vertical)</option>
-                <option value="1:1">1:1 (Square)</option>
-                <option value="4:3">4:3 (Standard)</option>
-                <option value="custom">Custom</option>
+          </div>
+        </section>
+        
+        <section className="settings-section">
+          <h2>Production Settings</h2>
+          <div className="settings-grid">
+            <div className="setting-group">
+              <label>Resolution</label>
+              <select value={resolution} onChange={(e) => setResolution(e.target.value)}>
+                <option value="3840x2160">4K (3840x2160)</option>
+                <option value="1920x1080">Full HD (1920x1080)</option>
+                <option value="1280x720">HD (1280x720)</option>
               </select>
             </div>
-          </section>
-
-          <section className="prompts-section">
-            <h2>Scene Prompts</h2>
-            {prompts.map((prompt, index) => (
-              <div key={index} className="prompt-item">
-                <textarea
-                  value={prompt}
-                  onChange={(e) => handlePromptChange(index, e.target.value)}
-                  placeholder={`Prompt ${index + 1}: Describe the cinematic scene...`}
-                  rows={3}
-                />
-                {prompts.length > 1 && (
-                  <button onClick={() => removePrompt(index)} className="remove-btn">✕</button>
-                )}
-              </div>
-            ))}
-            {prompts.length < 10 && (
-              <button onClick={addPrompt} className="add-prompt-btn">+ Add Prompt</button>
-            )}
-          </section>
-
-          <button 
-            onClick={generateImages} 
-            className="generate-btn"
-            disabled={isGenerating || !prompts.some(p => p.trim())}
-          >
-            {isGenerating ? 'Generating...' : '🎥 Generate All Frames'}
-          </button>
-        </div>
-
-        <div className="right-panel">
-          <div className="results-header">
-            <h2>Generated Frames ({results.length})</h2>
-            {results.length > 0 && (
-              <div className="export-buttons">
-                <button onClick={downloadAll} className="export-btn">⬇ Download All</button>
-                <button onClick={exportScript} className="export-btn">📄 Export Script</button>
-              </div>
-            )}
+            <div className="setting-group">
+              <label>Frame Rate</label>
+              <select value={fps} onChange={(e) => setFps(e.target.value)}>
+                <option value="24">24 fps (Cinematic)</option>
+                <option value="30">30 fps (Standard)</option>
+                <option value="60">60 fps (Smooth)</option>
+              </select>
+            </div>
           </div>
-
-          <div className="results-grid">
-            {results.length === 0 ? (
-              <div className="empty-state">
-                <p>No frames generated yet</p>
-                <p className="hint">Add prompts and click Generate to create 4K cinematic frames</p>
-              </div>
-            ) : (
-              results.map(result => (
-                <div key={result.id} className="result-card">
-                  <img src={result.imageUrl} alt={result.prompt} />
-                  <div className="result-info">
-                    <h4>{result.id}</h4>
-                    <p className="result-prompt">{result.prompt}</p>
-                    <div className="script-details">
-                      <small><strong>Camera:</strong> {result.script.camera}</small>
-                      <small><strong>Lighting:</strong> {result.script.lighting}</small>
-                      <small><strong>Audio:</strong> {result.script.audio}</small>
-                      <small><strong>Continuity:</strong> {result.script.continuity}</small>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+        </section>
+        
+        <section className="prompts-section">
+          <h2>Scene Descriptions</h2>
+          {prompts.map((prompt, i) => (
+            <div key={i} className="prompt-input">
+              <span className="prompt-label">Shot {i + 1}</span>
+              <textarea
+                value={prompt}
+                onChange={(e) => updatePrompt(i, e.target.value)}
+                placeholder="Describe the scene in detail..."
+                rows="2"
+              />
+            </div>
+          ))}
+          <button onClick={addPrompt} className="add-btn">Add Shot</button>
+          <button onClick={generateShots} className="generate-btn">Generate Shot List</button>
+        </section>
+        
+        {shots.length > 0 && (
+          <section className="shots-section">
+            <h2>Shot List ({shots.length} shots)</h2>
+            <div className="table-container">
+              <table className="shots-table">
+                <thead>
+                  <tr>
+                    <th>Shot</th>
+                    <th>Description</th>
+                    <th>Resolution</th>
+                    <th>FPS</th>
+                    <th>Duration</th>
+                    <th>Camera</th>
+                    <th>Lighting</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {shots.map(shot => (
+                    <tr key={shot.id}>
+                      <td>{shot.number.toString().padStart(3, '0')}</td>
+                      <td className="description-cell">{shot.description}</td>
+                      <td>{shot.resolution}</td>
+                      <td>{shot.fps}</td>
+                      <td>{shot.duration}</td>
+                      <td>{shot.camera}</td>
+                      <td>{shot.lighting}</td>
+                      <td>
+                        <button onClick={() => deleteShot(shot.id)} className="delete-btn">
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );
