@@ -3,67 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Studio Demo - REAL Working Version</title>
+    <title>🎬 Sripto AI Studio - FREE Unlimited APIs</title>
     <script src="https://js.puter.com/v2/"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #000;
+            color: #fff;
             min-height: 100vh;
             padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #28a745 0%, #ffc107 50%, #dc3545 100%);
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 40px rgba(255,193,7,0.3);
+        }
+        .header h1 {
+            font-size: 3.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+        }
+        .header p {
+            font-size: 1.3em;
+            opacity: 0.95;
         }
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: white;
-            border-radius: 20px;
+        }
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        .demo-card {
+            background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
+            border: 2px solid #ffc107;
+            border-radius: 15px;
             padding: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transition: all 0.3s;
         }
-        h1 {
-            text-align: center;
-            color: #667eea;
-            margin-bottom: 10px;
-            font-size: 2.5em;
+        .demo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(255,193,7,0.4);
+            border-color: #28a745;
         }
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-        }
-        .demo-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-        .demo-section h2 {
-            color: #764ba2;
+        .demo-card h2 {
+            color: #ffc107;
+            font-size: 2em;
             margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         textarea {
             width: 100%;
             padding: 15px;
-            border: 2px solid #667eea;
-            border-radius: 8px;
+            border: 2px solid #28a745;
+            border-radius: 10px;
             font-size: 16px;
-            min-height: 100px;
+            min-height: 120px;
             resize: vertical;
+            background: #000;
+            color: #fff;
+            margin-bottom: 15px;
         }
         button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #28a745, #20c997);
             color: white;
             border: none;
             padding: 15px 30px;
-            border-radius: 8px;
-            font-size: 16px;
+            border-radius: 10px;
+            font-size: 18px;
             cursor: pointer;
-            margin: 10px 5px;
-            transition: transform 0.2s;
+            transition: all 0.3s;
+            width: 100%;
+            font-weight: bold;
         }
         button:hover {
             transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(40,167,69,0.5);
         }
         button:disabled {
             opacity: 0.5;
@@ -72,106 +96,101 @@
         .result {
             margin-top: 20px;
             padding: 20px;
-            background: white;
-            border-radius: 8px;
-            border: 2px solid #667eea;
+            background: #000;
+            border: 2px solid #dc3545;
+            border-radius: 10px;
+            display: none;
         }
+        .result.show { display: block; }
         .loading {
             text-align: center;
             padding: 20px;
             font-style: italic;
-            color: #764ba2;
+            color: #ffc107;
         }
-        .success {
-            color: #28a745;
-            font-weight: bold;
-        }
-        .audio-player {
-            width: 100%;
-            margin-top: 10px;
-        }
-        .feature-grid {
+        .success { color: #28a745; font-weight: bold; }
+        .features {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
+            gap: 20px;
+            margin-top: 40px;
         }
-        .feature-card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
+        .feature-box {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            padding: 25px;
+            border-radius: 15px;
             text-align: center;
-            border: 2px solid #667eea;
+            transition: all 0.3s;
         }
-        .feature-card h3 {
-            color: #764ba2;
+        .feature-box:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(40,167,69,0.4);
+        }
+        .feature-box h3 {
+            font-size: 1.8em;
             margin-bottom: 10px;
+        }
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2.5em; }
+            .demo-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎬 AI Studio Demo</h1>
-        <p class="subtitle">REAL Working AI Features with FREE APIs - Powered by Puter.js</p>
+        <div class="header">
+            <h1>🎬 SRIPTO AI STUDIO</h1>
+            <p>FREE Unlimited AI APIs - Text-to-Speech, AI Chat & Image Generation</p>
+            <p style="font-size: 0.9em; margin-top: 10px;">Powered by Puter.js | No API Keys Required</p>
+        </div>
 
-        <!-- Feature Overview -->
-        <div class="feature-grid">
-            <div class="feature-card">
-                <h3>🤖 AI Chat</h3>
-                <p>FREE OpenRouter Models</p>
+        <div class="demo-grid">
+            <div class="demo-card">
+                <h2>🤖 AI Story Generator</h2>
+                <p style="margin-bottom: 15px; color: #ccc;">Generate creative stories with FREE OpenRouter AI models</p>
+                <textarea id="storyPrompt" placeholder="Enter your story idea... (e.g., 'Write a short story about a brave warrior')"></textarea>
+                <button id="storyBtn" onclick="generateStory()">🤖 Generate Story</button>
+                <div id="storyResult" class="result"></div>
             </div>
-            <div class="feature-card">
-                <h3>🎙️ Text-to-Speech</h3>
-                <p>Unlimited Voice Synthesis</p>
+
+            <div class="demo-card">
+                <h2>🎙️ Text-to-Speech</h2>
+                <p style="margin-bottom: 15px; color: #ccc;">Convert any text to natural voice - UNLIMITED & FREE</p>
+                <textarea id="ttsText" placeholder="Enter text to speak... (e.g., 'Welcome to Sripto AI Studio')"></textarea>
+                <button id="ttsBtn" onclick="generateSpeech()">🎙️ Generate Voice</button>
+                <div id="ttsResult" class="result"></div>
             </div>
-            <div class="feature-card">
-                <h3>✨ Image Gen</h3>
-                <p>Puter AI Images</p>
-            </div>
-            <div class="feature-card">
-                <h3>📝 Smart AI</h3>
-                <p>Story Understanding</p>
+
+            <div class="demo-card">
+                <h2>✨ AI Image Analysis</h2>
+                <p style="margin-bottom: 15px; color: #ccc;">Analyze and get creative insights about any image description</p>
+                <textarea id="imagePrompt" placeholder="Describe an image... (e.g., 'A sunset over mountains with birds flying')"></textarea>
+                <button id="imageBtn" onclick="analyzeImage()">✨ Analyze Image</button>
+                <div id="imageResult" class="result"></div>
             </div>
         </div>
 
-        <!-- Demo 1: AI Story Generator -->
-        <div class="demo-section">
-            <h2>Demo 1: AI Story Generator (FREE OpenRouter)</h2>
-            <textarea id="storyPrompt" placeholder="Enter your story idea: e.g., 'Write a short story about a robot discovering emotions'"></textarea>
-            <button onclick="generateStory()" id="storyBtn">🤖 Generate Story with AI</button>
-            <div id="storyResult" class="result" style="display:none;"></div>
-        </div>
-
-        <!-- Demo 2: Text-to-Speech -->
-        <div class="demo-section">
-            <h2>Demo 2: Text-to-Speech (FREE Unlimited)</h2>
-            <textarea id="ttsText" placeholder="Enter text to convert to speech: e.g., 'Hello, welcome to the AI studio!'"></textarea>
-            <button onclick="generateSpeech()" id="ttsBtn">🎙️ Generate Voice</button>
-            <div id="ttsResult" class="result" style="display:none;"></div>
-        </div>
-
-        <!-- Demo 3: Image Description -->
-        <div class="demo-section">
-            <h2>Demo 3: AI Image Analysis</h2>
-            <textarea id="imagePrompt" placeholder="Describe an image you want to analyze: e.g., 'A sunset over mountains'"></textarea>
-            <button onclick="analyzeImage()" id="imageBtn">✨ Analyze with AI</button>
-            <div id="imageResult" class="result" style="display:none;"></div>
-        </div>
-
-        <div style="margin-top: 30px; padding: 20px; background: #fff3cd; border-radius: 10px;">
-            <h3 style="color: #856404;">✅ All Features Working!</h3>
-            <ul style="margin-left: 20px; color: #856404;">
-                <li>NO API keys required - completely FREE</li>
-                <li>Unlimited usage via Puter.js</li>
-                <li>Access to 400+ AI models via OpenRouter</li>
-                <li>Real text-to-speech synthesis</li>
-                <li>This is a WORKING demo you can test RIGHT NOW!</li>
-            </ul>
+        <div class="features">
+            <div class="feature-box">
+                <h3>🆓 100% FREE</h3>
+                <p>No API keys, no credit cards, no limits!</p>
+            </div>
+            <div class="feature-box">
+                <h3>🚀 400+ Models</h3>
+                <p>Access to OpenRouter AI models</p>
+            </div>
+            <div class="feature-box">
+                <h3>🎯 Easy Integration</h3>
+                <p>Simple Puter.js API for all features</p>
+            </div>
+            <div class="feature-box">
+                <h3>⚡ Instant Results</h3>
+                <p>Real-time AI processing</p>
+            </div>
         </div>
     </div>
 
     <script>
-        // Demo 1: AI Story Generator using FREE OpenRouter
         async function generateStory() {
             const prompt = document.getElementById('storyPrompt').value;
             const btn = document.getElementById('storyBtn');
@@ -183,32 +202,29 @@
             }
             
             btn.disabled = true;
-            btn.textContent = '⏳ Generating with AI...';
-            result.style.display = 'block';
-            result.innerHTML = '<div class="loading">🤖 AI is thinking...</div>';
+            btn.textContent = '⏳ Generating...';
+            result.classList.add('show');
+            result.innerHTML = '<div class="loading">🤖 AI is crafting your story...</div>';
             
             try {
                 const response = await puter.ai.chat(prompt, {
                     model: 'openrouter:meta-llama/llama-3.1-8b-instruct'
                 });
-                
                 result.innerHTML = `
                     <h3 class="success">✅ Story Generated!</h3>
                     <p><strong>Your Prompt:</strong> ${prompt}</p>
-                    <p><strong>AI Response:</strong></p>
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 10px;">
+                    <div style="background: #1a1a1a; padding: 15px; border-radius: 5px; margin-top: 10px; line-height: 1.6;">
                         ${response}
                     </div>
                 `;
             } catch (error) {
-                result.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+                result.innerHTML = `<p style="color: #dc3545;">Error: ${error.message}</p>`;
             }
             
             btn.disabled = false;
-            btn.textContent = '🤖 Generate Story with AI';
+            btn.textContent = '🤖 Generate Story';
         }
 
-        // Demo 2: Text-to-Speech using FREE Puter.js TTS
         async function generateSpeech() {
             const text = document.getElementById('ttsText').value;
             const btn = document.getElementById('ttsBtn');
@@ -221,27 +237,24 @@
             
             btn.disabled = true;
             btn.textContent = '⏳ Generating Voice...';
-            result.style.display = 'block';
+            result.classList.add('show');
             result.innerHTML = '<div class="loading">🎙️ Synthesizing speech...</div>';
             
             try {
                 await puter.ai.txt2speech(text);
-                
                 result.innerHTML = `
-                    <h3 class="success">✅ Speech Generated!</h3>
+                    <h3 class="success">✅ Voice Generated!</h3>
                     <p><strong>Text:</strong> ${text}</p>
-                    <p>Audio should have played automatically!</p>
-                    <p style="color: #764ba2;"><em>Puter.js plays audio directly - no download needed!</em></p>
+                    <p style="color: #ffc107; margin-top: 10px;"><em>🔊 Audio played automatically! Puter.js plays audio directly.</em></p>
                 `;
             } catch (error) {
-                result.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+                result.innerHTML = `<p style="color: #dc3545;">Error: ${error.message}</p>`;
             }
             
             btn.disabled = false;
             btn.textContent = '🎙️ Generate Voice';
         }
 
-        // Demo 3: AI Image Analysis
         async function analyzeImage() {
             const prompt = document.getElementById('imagePrompt').value;
             const btn = document.getElementById('imageBtn');
@@ -254,7 +267,7 @@
             
             btn.disabled = true;
             btn.textContent = '⏳ Analyzing...';
-            result.style.display = 'block';
+            result.classList.add('show');
             result.innerHTML = '<div class="loading">✨ AI is analyzing...</div>';
             
             try {
@@ -262,25 +275,22 @@
                 const response = await puter.ai.chat(analysisPrompt, {
                     model: 'openrouter:google/gemini-pro-1.5'
                 });
-                
                 result.innerHTML = `
                     <h3 class="success">✅ Analysis Complete!</h3>
                     <p><strong>Image Description:</strong> ${prompt}</p>
-                    <p><strong>AI Analysis:</strong></p>
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 10px;">
+                    <div style="background: #1a1a1a; padding: 15px; border-radius: 5px; margin-top: 10px; line-height: 1.6;">
                         ${response}
                     </div>
                 `;
             } catch (error) {
-                result.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+                result.innerHTML = `<p style="color: #dc3545;">Error: ${error.message}</p>`;
             }
             
             btn.disabled = false;
-            btn.textContent = '✨ Analyze with AI';
+            btn.textContent = '✨ Analyze Image';
         }
 
-        // Show ready message
-        console.log('🎉 AI Studio Demo Ready! Puter.js loaded successfully.');
+        console.log('🎉 Sripto AI Studio Ready! Powered by Puter.js');
     </script>
 </body>
 </html>
