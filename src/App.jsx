@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 
 function App() {
+  const [darkMode, setDarkMode] = useState(false);
   const [references, setReferences] = useState([
     { id: 1, name: 'Reference 1', file: null, preview: null },
     { id: 2, name: 'Reference 2', file: null, preview: null },
@@ -10,9 +11,20 @@ function App() {
   ]);
   
   const [prompts, setPrompts] = useState(['']);
+  const [bulkText, setBulkText] = useState('');
   const [shots, setShots] = useState([]);
+  const [generatedImages, setGeneratedImages] = useState([]);
   const [resolution, setResolution] = useState('3840x2160');
   const [fps, setFps] = useState('24');
+  const [activeTab, setActiveTab] = useState('single');
+  
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+  }, [darkMode]);
   
   const handleImageUpload = (id, event) => {
     const file = event.target.files[0];
@@ -44,20 +56,48 @@ function App() {
       fps,
       duration: '00:00:05',
       camera: 'Wide angle, 35mm',
-      lighting: 'Natural daylight, high contrast'
+      lighting: 'Natural daylight, high contrast',
+      imageUrl: `https://via.placeholder.com/400x225/333/fff?text=Frame+${i+1}`
     }));
     setShots(newShots);
+    setGeneratedImages(newShots.map(s => s.imageUrl));
+  };
+  
+  const generateBulkShots = () => {
+    const lines = bulkText.split('\n').filter(line => line.trim());
+    const newShots = lines.map((line, i) => ({
+      id: Date.now() + i,
+      number: i + 1,
+      description: line,
+      resolution,
+      fps,
+      duration: '00:00:05',
+      camera: 'Wide angle, 35mm',
+      lighting: 'Natural daylight, high contrast',
+      imageUrl: `https://via.placeholder.com/400x225/333/fff?text=Frame+${i+1}`
+    }));
+    setShots(newShots);
+    setGeneratedImages(newShots.map(s => s.imageUrl));
   };
   
   const deleteShot = (id) => {
     setShots(shots.filter(s => s.id !== id));
   };
   
+  const exportVideo = () => {
+    alert('Video export feature - Coming soon! This will compile all frames into a video.');
+  };
+  
   return (
-    <div className="app">
+    <div className={`app ${darkMode ? 'dark' : ''}`}>
       <header className="header">
-        <h1>SRIPTO</h1>
-        <p>Professional Video Frame Generator</p>
+        <div className="header-content">
+          <h1>SRIPTO</h1>
+          <p>Professional Video Frame Generator</p>
+        </div>
+        <button onClick={() => setDarkMode(!darkMode)} className="dark-mode-toggle">
+          {darkMode ? '☀️ Light' : '🌙 Dark'}
+        </button>
       </header>
       
       <div className="container">
@@ -118,21 +158,76 @@ function App() {
         </section>
         
         <section className="prompts-section">
-          <h2>Scene Descriptions</h2>
-          {prompts.map((prompt, i) => (
-            <div key={i} className="prompt-input">
-              <span className="prompt-label">Shot {i + 1}</span>
-              <textarea
-                value={prompt}
-                onChange={(e) => updatePrompt(i, e.target.value)}
-                placeholder="Describe the scene in detail..."
-                rows="2"
-              />
+          <div className="tab-header">
+            <button 
+              className={`tab-btn ${activeTab === 'single' ? 'active' : ''}`}
+              onClick={() => setActiveTab('single')}
+            >
+              Single Shots
+            </button>
+            <button 
+              className={`tab-btn ${activeTab === 'bulk' ? 'active' : ''}`}
+              onClick={() => setActiveTab('bulk')}
+            >
+              Bulk Creation
+            </button>
+          </div>
+          
+          {activeTab === 'single' ? (
+            <div>
+              <h2>Scene Descriptions</h2>
+              {prompts.map((prompt, i) => (
+                <div key={i} className="prompt-input">
+                  <span className="prompt-label">Shot {i + 1}</span>
+                  <textarea
+                    value={prompt}
+                    onChange={(e) => updatePrompt(i, e.target.value)}
+                    placeholder="Describe the scene in detail..."
+                    rows="2"
+                  />
+                </div>
+              ))}
+              <button onClick={addPrompt} className="add-btn">Add Shot</button>
+              <button onClick={generateShots} className="generate-btn">Generate Shot List</button>
             </div>
-          ))}
-          <button onClick={addPrompt} className="add-btn">Add Shot</button>
-          <button onClick={generateShots} className="generate-btn">Generate Shot List</button>
+          ) : (
+            <div>
+              <h2>Bulk Video Creation</h2>
+              <p className="bulk-hint">Enter one scene per line to create multiple shots at once:</p>
+              <textarea
+                value={bulkText}
+                onChange={(e) => setBulkText(e.target.value)}
+                placeholder={"Wide angle of warrior on cliff at sunset\nClose-up of warrior's determined face\nBird's eye view of battlefield below\nDramatic slow-motion sword draw"}
+                rows="10"
+                className="bulk-textarea"
+              />
+              <button onClick={generateBulkShots} className="generate-btn">Generate All Shots</button>
+            </div>
+          )}
         </section>
+        
+        {generatedImages.length > 0 && (
+          <section className="gallery-section">
+            <h2>Generated Frames ({generatedImages.length})</h2>
+            <div className="image-gallery">
+              {shots.map((shot, index) => (
+                <div key={shot.id} className="gallery-item">
+                  <div className="gallery-image">
+                    <img src={shot.imageUrl} alt={`Frame ${shot.number}`} />
+                    <div className="gallery-overlay">
+                      <span className="frame-number">{shot.number.toString().padStart(3, '0')}</span>
+                    </div>
+                  </div>
+                  <div className="gallery-info">
+                    <p className="gallery-desc">{shot.description.substring(0, 60)}...</p>
+                    <span className="gallery-meta">{shot.resolution} | {shot.fps}fps</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button onClick={exportVideo} className="export-btn">Export as Video</button>
+          </section>
+        )}
         
         {shots.length > 0 && (
           <section className="shots-section">
