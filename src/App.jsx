@@ -9,87 +9,106 @@ function App() {
     { id: 3, name: 'Reference 3', file: null, preview: null },
     { id: 4, name: 'Reference 4', file: null, preview: null }
   ]);
-  
-  const [prompts, setPrompts] = useState(['']);
+
+  const [prompts, setPrompts] = useState('');
   const [bulkText, setBulkText] = useState('');
   const [shots, setShots] = useState([]);
   const [generatedImages, setGeneratedImages] = useState([]);
   const [resolution, setResolution] = useState('3840x2160');
   const [fps, setFps] = useState('24');
   const [activeTab, setActiveTab] = useState('single');
-  
+  const [aiPrompt, setAiPrompt] = useState('');
+
   useEffect(() => {
-    if (darkMode) {
-      document.body.classList.add('dark-mode');
-    } else {
-      document.body.classList.remove('dark-mode');
-    }
+    document.body.setAttribute('data-theme', darkMode ? 'dark' : 'light');
   }, [darkMode]);
-  
-  const handleImageUpload = (id, event) => {
-    const file = event.target.files[0];
+
+  const handleImageUpload = (refId, e) => {
+    const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setReferences(refs => refs.map(ref => 
-          ref.id === id ? { ...ref, file, preview: reader.result } : ref
-        ));
+        setReferences(
+          references.map(r => r.id === refId ? {...r, file, preview: reader.result} : r)
+        );
       };
       reader.readAsDataURL(file);
     }
   };
-  
-  const addPrompt = () => setPrompts([...prompts, '']);
-  
-  const updatePrompt = (index, value) => {
-    const newPrompts = [...prompts];
-    newPrompts[index] = value;
-    setPrompts(newPrompts);
-  };
-  
-  const generateShots = () => {
-    const newShots = prompts.filter(p => p.trim()).map((prompt, i) => ({
-      id: Date.now() + i,
-      number: i + 1,
-      description: prompt,
+
+  const addShot = () => {
+    setShots([...shots, {
+      id: Date.now() + shots.length,
+      number: shots.length + 1,
+      description: '',
       resolution,
       fps,
       duration: '00:00:05',
       camera: 'Wide angle, 35mm',
-      lighting: 'Natural daylight, high contrast',
-      imageUrl: `https://via.placeholder.com/400x225/333/fff?text=Frame+${i+1}`
-    }));
-    setShots(newShots);
-    setGeneratedImages(newShots.map(s => s.imageUrl));
+      lighting: 'Natural daylight, high contrast'
+    }]);
   };
-  
+
+  const updateShot = (id, field, value) => {
+    setShots(shots.map(s => s.id === id ? {...s, [field]: value} : s));
+  };
+
+  const deleteShot = (id) => {
+    setShots(shots.filter(s => s.id !== id));
+  };
+
   const generateBulkShots = () => {
+    if (bulkText.trim() === '') return;
+    
     const lines = bulkText.split('\n').filter(line => line.trim());
     const newShots = lines.map((line, i) => ({
       id: Date.now() + i,
       number: i + 1,
-      description: line,
+      description: line.trim(),
       resolution,
       fps,
       duration: '00:00:05',
       camera: 'Wide angle, 35mm',
       lighting: 'Natural daylight, high contrast',
-      imageUrl: `https://via.placeholder.com/400x225/333/fff?text=Frame+${i+1}`
+      imageUrl: `https://picsum.photos/seed/bulk${Date.now()}${i}/400/225`
     }));
+    
     setShots(newShots);
     setGeneratedImages(newShots.map(s => s.imageUrl));
   };
-  
-  const deleteShot = (id) => {
-    setShots(shots.filter(s => s.id !== id));
+
+  const generateShotList = () => {
+    const updatedShots = shots.map((s, i) => ({
+      ...s,
+      imageUrl: `https://picsum.photos/seed/frame${Date.now()}${i}/400/225`
+    }));
+    setShots(updatedShots);
+    setGeneratedImages(updatedShots.map(s => s.imageUrl));
   };
-  
-  const exportVideo = () => {
-    alert('Video export feature - Coming soon! This will compile all frames into a video.');
+
+  const generateFromAI = () => {
+    if (aiPrompt.trim() === '') return;
+    
+    const scenes = aiPrompt.split('\n\n').filter(s => s.trim());
+    const newShots = scenes.map((scene, i) => ({
+      id: Date.now() + i,
+      number: i + 1,
+      description: scene.trim(),
+      resolution,
+      fps,
+      duration: '00:00:05',
+      camera: 'Wide angle, 35mm',
+      lighting: 'Natural daylight, high contrast',
+      imageUrl: `https://picsum.photos/seed/ai${Date.now()}${i}/400/225`
+    }));
+    
+    setShots(newShots);
+    setGeneratedImages(newShots.map(s => s.imageUrl));
+    setActiveTab('single');
   };
-  
+
   return (
-    <div className={`app ${darkMode ? 'dark' : ''}`}>
+    <div className={`app ${darkMode ? 'dark' : 'light'}`}>
       <header className="header">
         <div className="header-content">
           <h1>SRIPTO</h1>
@@ -99,26 +118,49 @@ function App() {
           {darkMode ? '☀️ Light' : '🌙 Dark'}
         </button>
       </header>
-      
+
       <div className="container">
+        <section className="ai-creator-section">
+          <h2>✨ AI STORY CREATOR</h2>
+          <div className="ai-creator-content">
+            <textarea
+              className="ai-prompt-input"
+              placeholder="Describe your story or character...\n\nExample:\n• A Caribbean adventure with humanoid animals\n• Each character has unique Rasta-inspired clothing\n• Cinematic 4K quality with dramatic lighting\n\nEnter multiple scenes separated by blank lines for automatic shot generation."
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              rows={10}
+            />
+            <div className="ai-creator-actions">
+              <button onClick={generateFromAI} className="btn-primary btn-large">
+                ✨ Generate Story Frames
+              </button>
+              <div className="ai-stats">
+                <span className="stat-badge">{shots.length} shots created</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="references-section">
-          <h2>Reference Images</h2>
+          <h2>🖼️ REFERENCE IMAGES</h2>
           <div className="references-grid">
-            {references.map(ref => (
+            {references.map((ref) => (
               <div key={ref.id} className="reference-card">
                 <div className="reference-preview">
                   {ref.preview ? (
                     <img src={ref.preview} alt={ref.name} />
                   ) : (
-                    <div className="preview-placeholder">No image</div>
+                    <div className="no-image">No image</div>
                   )}
                 </div>
-                <input
-                  type="text"
-                  value={ref.name}
-                  onChange={(e) => setReferences(refs => 
-                    refs.map(r => r.id === ref.id ? {...r, name: e.target.value} : r)
-                  )}
+                <input 
+                  type="text" 
+                  value={ref.name} 
+                  onChange={(e) => {
+                    setReferences(
+                      references.map(r => r.id === ref.id ? {...r, name: e.target.value} : r)
+                    );
+                  }}
                   className="reference-name"
                 />
                 <label className="upload-btn">
@@ -134,9 +176,9 @@ function App() {
             ))}
           </div>
         </section>
-        
+
         <section className="settings-section">
-          <h2>Production Settings</h2>
+          <h2>⚙️ PRODUCTION SETTINGS</h2>
           <div className="settings-grid">
             <div className="setting-group">
               <label>Resolution</label>
@@ -156,84 +198,99 @@ function App() {
             </div>
           </div>
         </section>
-        
-        <section className="prompts-section">
-          <div className="tab-header">
+
+        <section className="shots-section">
+          <div className="tabs">
             <button 
-              className={`tab-btn ${activeTab === 'single' ? 'active' : ''}`}
+              className={`tab ${activeTab === 'single' ? 'active' : ''}`}
               onClick={() => setActiveTab('single')}
             >
               Single Shots
             </button>
             <button 
-              className={`tab-btn ${activeTab === 'bulk' ? 'active' : ''}`}
+              className={`tab ${activeTab === 'bulk' ? 'active' : ''}`}
               onClick={() => setActiveTab('bulk')}
             >
               Bulk Creation
             </button>
           </div>
-          
-          {activeTab === 'single' ? (
-            <div>
-              <h2>Scene Descriptions</h2>
-              {prompts.map((prompt, i) => (
-                <div key={i} className="prompt-input">
-                  <span className="prompt-label">Shot {i + 1}</span>
-                  <textarea
-                    value={prompt}
-                    onChange={(e) => updatePrompt(i, e.target.value)}
-                    placeholder="Describe the scene in detail..."
-                    rows="2"
-                  />
+
+          <div className="tab-content">
+            {activeTab === 'single' ? (
+              <div className="single-shots">
+                <h2>📝 SCENE DESCRIPTIONS</h2>
+                {shots.map((shot) => (
+                  <div key={shot.id} className="shot-item">
+                    <h3>Shot {shot.number}</h3>
+                    <textarea
+                      value={shot.description}
+                      onChange={(e) => updateShot(shot.id, 'description', e.target.value)}
+                      placeholder="Describe the scene in detail..."
+                    />
+                  </div>
+                ))}
+                <div className="shot-actions">
+                  <button onClick={addShot} className="btn-secondary">
+                    + Add Shot
+                  </button>
+                  <button onClick={generateShotList} className="btn-primary">
+                    Generate Shot List
+                  </button>
                 </div>
-              ))}
-              <button onClick={addPrompt} className="add-btn">Add Shot</button>
-              <button onClick={generateShots} className="generate-btn">Generate Shot List</button>
-            </div>
-          ) : (
-            <div>
-              <h2>Bulk Video Creation</h2>
-              <p className="bulk-hint">Enter one scene per line to create multiple shots at once:</p>
-              <textarea
-                value={bulkText}
-                onChange={(e) => setBulkText(e.target.value)}
-                placeholder={"Wide angle of warrior on cliff at sunset\nClose-up of warrior's determined face\nBird's eye view of battlefield below\nDramatic slow-motion sword draw"}
-                rows="10"
-                className="bulk-textarea"
-              />
-              <button onClick={generateBulkShots} className="generate-btn">Generate All Shots</button>
-            </div>
-          )}
+              </div>
+            ) : (
+              <div className="bulk-creation">
+                <h2>📋 BULK SCENE CREATION</h2>
+                <p className="bulk-instructions">
+                  Enter one scene description per line. Each line will become a separate shot.
+                </p>
+                <textarea
+                  value={bulkText}
+                  onChange={(e) => setBulkText(e.target.value)}
+                  placeholder="Scene 1: Wide shot of Caribbean beach at sunrise\nScene 2: Close-up of character's face\nScene 3: Action sequence with dramatic lighting\n..."
+                  rows={12}
+                  className="bulk-textarea"
+                />
+                <button onClick={generateBulkShots} className="btn-primary btn-large">
+                  Generate All Shots
+                </button>
+              </div>
+            )}
+          </div>
         </section>
-        
+
         {generatedImages.length > 0 && (
           <section className="gallery-section">
-            <h2>Generated Frames ({generatedImages.length})</h2>
-            <div className="image-gallery">
-              {shots.map((shot, index) => (
-                <div key={shot.id} className="gallery-item">
-                  <div className="gallery-image">
-                    <img src={shot.imageUrl} alt={`Frame ${shot.number}`} />
-                    <div className="gallery-overlay">
-                      <span className="frame-number">{shot.number.toString().padStart(3, '0')}</span>
-                    </div>
+            <div className="gallery-header">
+              <h2>🎬 GENERATED FRAMES ({generatedImages.length})</h2>
+              <button className="btn-export">📥 Export as Video</button>
+            </div>
+            <div className="frames-grid">
+              {shots.map((shot, i) => (
+                <div key={shot.id} className="frame-card">
+                  <div className="frame-image">
+                    <img src={shot.imageUrl} alt={`Frame ${i + 1}`} />
+                    <div className="frame-number">{String(i + 1).padStart(3, '0')}</div>
                   </div>
-                  <div className="gallery-info">
-                    <p className="gallery-desc">{shot.description.substring(0, 60)}...</p>
-                    <span className="gallery-meta">{shot.resolution} | {shot.fps}fps</span>
+                  <div className="frame-info">
+                    <p className="frame-description">{shot.description}</p>
+                    <div className="frame-meta">
+                      <span>{shot.resolution}</span>
+                      <span>|</span>
+                      <span>{shot.fps} fps</span>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
-            <button onClick={exportVideo} className="export-btn">Export as Video</button>
           </section>
         )}
-        
+
         {shots.length > 0 && (
-          <section className="shots-section">
-            <h2>Shot List ({shots.length} shots)</h2>
-            <div className="table-container">
-              <table className="shots-table">
+          <section className="table-section">
+            <h2>📊 SHOT LIST ({shots.length} SHOTS)</h2>
+            <div className="table-wrapper">
+              <table className="shot-table">
                 <thead>
                   <tr>
                     <th>Shot</th>
@@ -247,9 +304,9 @@ function App() {
                   </tr>
                 </thead>
                 <tbody>
-                  {shots.map(shot => (
+                  {shots.map((shot, i) => (
                     <tr key={shot.id}>
-                      <td>{shot.number.toString().padStart(3, '0')}</td>
+                      <td>{String(i + 1).padStart(3, '0')}</td>
                       <td className="description-cell">{shot.description}</td>
                       <td>{shot.resolution}</td>
                       <td>{shot.fps}</td>
@@ -257,7 +314,7 @@ function App() {
                       <td>{shot.camera}</td>
                       <td>{shot.lighting}</td>
                       <td>
-                        <button onClick={() => deleteShot(shot.id)} className="delete-btn">
+                        <button onClick={() => deleteShot(shot.id)} className="btn-delete">
                           Delete
                         </button>
                       </td>
