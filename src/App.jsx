@@ -1,3 +1,5 @@
+// VWPS - Video Workplace Studio v2.0
+// Powered by Hugging Face Inference API
 import { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css';
 
